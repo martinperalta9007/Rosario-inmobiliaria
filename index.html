@@ -919,10 +919,37 @@ async function importarFicha(){
   st.className='import-status loading'; st.textContent='⟳ Analizando ficha con IA...';
   btn.disabled=true;
   try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{
+    const res=await try{
+    const res=await fetch('/.netlify/functions/importar',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
+      body:JSON.stringify({url})
+    });
+    const data=await res.json();
+    let txt=(data.content?.find(b=>b.type==='text')?.text||'').replace(/```json|```/g,'').trim();
+    const parsed=JSON.parse(txt);
+    if(parsed.titulo){
+      document.getElementById('f-titulo').value=parsed.titulo||'';
+      document.getElementById('f-tipo').value=parsed.tipo||'';
+      document.getElementById('f-op').value=parsed.operacion?.includes('Emp')?'Emprendimiento':'Venta';
+      document.getElementById('f-precio').value=parsed.precio||'';
+      document.getElementById('f-barrio').value=parsed.barrio||'';
+      document.getElementById('f-dir').value=parsed.direccion||'';
+      document.getElementById('f-sup').value=parsed.sup||'';
+      document.getElementById('f-amb').value=parsed.ambientes||'';
+      document.getElementById('f-dorm').value=parsed.dorm||'';
+      document.getElementById('f-ban').value=parsed.banos||'';
+      document.getElementById('f-img').value=parsed.imagen||'';
+      document.getElementById('f-desc').value=parsed.descripcion||'';
+      document.getElementById('f-link').value=parsed.link||url;
+      st.className='import-status ok';
+      st.textContent='✓ Datos importados. Revisá y completá antes de guardar.';
+    } else { throw new Error('sin datos'); }
+  } catch(err){
+    st.className='import-status err';
+    st.textContent='No se pudo conectar. Completá los datos manualmente.';
+  }
+  btn.disabled=false;
         model:'claude-sonnet-4-20250514',
         max_tokens:1000,
         system:`Sos un asistente que extrae y completa datos de fichas inmobiliarias argentinas de Xintel/Amaira.
