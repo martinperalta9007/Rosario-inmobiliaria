@@ -919,7 +919,6 @@ async function importarFicha(){
   st.className='import-status loading'; st.textContent='⟳ Analizando ficha con IA...';
   btn.disabled=true;
   try{
-    const res=await try{
     const res=await fetch('/.netlify/functions/importar',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -950,56 +949,7 @@ async function importarFicha(){
     st.textContent='No se pudo conectar. Completá los datos manualmente.';
   }
   btn.disabled=false;
-        model:'claude-sonnet-4-20250514',
-        max_tokens:1000,
-        system:`Sos un asistente que extrae y completa datos de fichas inmobiliarias argentinas de Xintel/Amaira.
-El usuario te pasa una URL de ficha. Respondé SOLO con un JSON válido, sin markdown, sin texto extra.
-Campos requeridos (string vacío si no disponible):
-{
-  "titulo": "descripción concisa: tipo + ambientes + barrio. Ej: 'Departamento 2 amb. en Echesortu'",
-  "tipo": "tipo inmueble (Departamento / Casa / PH / Terreno / Local / Cochera / etc)",
-  "operacion": "Venta o Emprendimiento",
-  "precio": "con moneda, ej: USD 185.000 o ARS 95.000.000",
-  "barrio": "barrio o localidad",
-  "direccion": "calle y número si disponible",
-  "sup": "número solo, ej: 72",
-  "ambientes": "número solo",
-  "dorm": "número solo",
-  "banos": "número solo",
-  "descripcion": "2-3 oraciones atractivas para comprador. Si no podés acceder a la ficha, indicá 'Consultá por detalles de esta propiedad.'",
-  "imagen": "",
-  "link": "la URL recibida exactamente"
-}`,
-        messages:[{role:'user',content:`URL de ficha Xintel: ${url}\nSi no podés acceder al contenido real, completá con datos plausibles basados en el código de ficha de la URL y aclaralo en la descripción.`}]
-      })
-    });
-    const data=await res.json();
-    let txt=(data.content?.find(b=>b.type==='text')?.text||'').replace(/```json|```/g,'').trim();
-    const parsed=JSON.parse(txt);
-    if(parsed.titulo){
-      document.getElementById('f-titulo').value=parsed.titulo||'';
-      document.getElementById('f-tipo').value=parsed.tipo||'';
-      document.getElementById('f-op').value=parsed.operacion?.includes('Emp')?'Emprendimiento':'Venta';
-      document.getElementById('f-precio').value=parsed.precio||'';
-      document.getElementById('f-barrio').value=parsed.barrio||'';
-      document.getElementById('f-dir').value=parsed.direccion||'';
-      document.getElementById('f-sup').value=parsed.sup||'';
-      document.getElementById('f-amb').value=parsed.ambientes||'';
-      document.getElementById('f-dorm').value=parsed.dorm||'';
-      document.getElementById('f-ban').value=parsed.banos||'';
-      document.getElementById('f-img').value=parsed.imagen||'';
-      document.getElementById('f-desc').value=parsed.descripcion||'';
-      document.getElementById('f-link').value=parsed.link||url;
-      st.className='import-status ok';
-      st.textContent='✓ Datos importados. Revisá y completá antes de guardar.';
-    } else { throw new Error('sin datos'); }
-  } catch(err){
-    st.className='import-status err';
-    st.textContent='No se pudo conectar. Completá los datos manualmente.';
-  }
-  btn.disabled=false;
 }
-
 // ── TOAST ─────────────────────────────────────────────────
 function showToast(msg){
   const el=document.getElementById('toastEl');
